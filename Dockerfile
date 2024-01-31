@@ -3,11 +3,9 @@
 # ------------------------------------------------------------------
 # python        3.9    (apt)
 # pytorch       latest (pip)
-# theano        latest (git)
-# lasagne       latest (git)
 # ==================================================================
 
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu20.04
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu20.04
 ENV LANG C.UTF-8
 RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
     PIP_INSTALL="python -m pip --no-cache-dir install --upgrade" && \
@@ -77,39 +75,6 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
         --pre torch torchvision torchaudio -f \
         https://download.pytorch.org/whl/nightly/cu118/torch_nightly.html \
         && \
-
-# ==================================================================
-# theano
-# ------------------------------------------------------------------
-
-    DEBIAN_FRONTEND=noninteractive $APT_INSTALL \
-        libblas-dev \
-        && \
-
-    wget -qO- https://github.com/Theano/libgpuarray/archive/v0.7.6.tar.gz | tar xz -C ~ && \
-    cd ~/libgpuarray* && mkdir -p build && cd build && \
-    cmake -D CMAKE_BUILD_TYPE=RELEASE \
-          -D CMAKE_INSTALL_PREFIX=/usr/local \
-          .. && \
-    make -j"$(nproc)" install && \
-    cd ~/libgpuarray* && \
-    python setup.py build && \
-    python setup.py install && \
-
-    printf '[global]\nfloatX = float32\ndevice = cuda0\n\n[dnn]\ninclude_path = /usr/local/cuda/targets/x86_64-linux/include\n' > ~/.theanorc && \
-
-    $PIP_INSTALL \
-        https://github.com/Theano/Theano/archive/master.zip \
-        && \
-
-# ==================================================================
-# lasagne
-# ------------------------------------------------------------------
-
-    $GIT_CLONE https://github.com/Lasagne/Lasagne ~/lasagne && \
-    cd ~/lasagne && \
-    $PIP_INSTALL \
-        . && \
 
 # ==================================================================
 # config & cleanup
